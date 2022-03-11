@@ -1,0 +1,30 @@
+{
+  "name": "mmm-binance",
+  "version": "1.0.0",
+  "description": "A module for MagicMirror 2 displaying the balance of Binance account.",
+  "main": "MMM-Binance.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anhdhbn/MMM-Binance.git"
+  },
+  "keywords": [
+    "magic",
+    "mirror",
+    "binance",
+    "module",
+    "mmm",
+    "mmm-magic-mirror"
+  ],
+  "author": "Duong Hong Anh",
+  "license": "ISC",
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/anhdhbn/MMM-Binance/issues"
+  },
+  "homepage": "https://github.com/anhdhbn/MMM-Binance#readme",
+  "dependencies": {
+    "node-binance-api": "^0.13.1"
+  }
+}
