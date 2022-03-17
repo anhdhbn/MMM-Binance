@@ -8,7 +8,8 @@ Module.register("MMM-Binance", {
 		fontSize: "small",
 		quoteCurrency: "USDT",
 		onlyShowIfBalanceGreaterThan: 1,
-		updateInterval: 1000
+		updateInterval: 1000,
+		deposited: {},
 	},
 
 	getStyles: function() {
@@ -22,6 +23,7 @@ Module.register("MMM-Binance", {
 			assets: [],
 			totalBalance: 0
 		};
+		this.ROIs = [];
 	},
 
 	getDom: function() {
@@ -49,7 +51,7 @@ Module.register("MMM-Binance", {
 			row.classList.add(this.config.fontSize);
 			
 			// logo, symbol, value, usdPrice, balance
-			let columns = ["symbol", "value", "usdPrice", "balance"];
+			let columns = ["symbol", "value", "usdPrice", "balance", "roi"];
 			for (let i = 0; i < columns.length; i++){
 				row.appendChild(this.getCell(columns[i], asset));
 			}
@@ -64,11 +66,15 @@ Module.register("MMM-Binance", {
 		return elem;
 	},
 	
+	getColumns: function () {
+		return ["Symbol", "Value", `Price/${this.config.quoteCurrency}`, `Balance/${this.config.quoteCurrency}`, 'ROI']
+	},
+	
 	getTableHeader: function() {
 		let header = document.createElement("thead");
 		let row = document.createElement("tr");
 		row.classList.add(this.config.fontSize);
-		let columns = ["Symbol", "Value", `Price/${this.config.quoteCurrency}`, `Balance/${this.config.quoteCurrency}`]
+		let columns = this.getColumns();
 		for (let i = 0; i < columns.length; i++) {
 			let cell = document.createElement("th");
 			cell.innerHTML = columns[i];
@@ -82,11 +88,29 @@ Module.register("MMM-Binance", {
 		let footer = document.createElement("tfoot");
 		let row = document.createElement("tr");
 		row.classList.add(this.config.fontSize);
-		let columns = ["Symbol", "Value", `Price/${this.config.quoteCurrency}`, `Balance/${this.config.quoteCurrency}`]
+		let columns = this.getColumns();
 		for(let i = 0; i < columns.length; i++){
 			let cell = document.createElement("td");
 			if (i === 0) cell.innerHTML = "Total balance";
 			else if (i === 3) cell.innerHTML = this.cryptoData.totalBalance.toFixed(2);
+			else if (i === 4) {
+				let symbolsDep = Object.keys(this.config.deposited);
+				let assets2 = this.cryptoData.assets.filter(asset => symbolsDep.includes(asset.symbol))
+				let totalDep = 0, totalBalance = 0;
+				for(let i = 0; i < this.ROIs.length; i++) {
+					totalDep += this.ROIs[i].totalDep
+				}
+				for(let i = 0; i < assets2.length; i++) {
+					totalBalance += assets2[i].balance;
+				}
+				if (totalBalance === 0) {
+					cell.innerHTML = "100%"
+				} else {
+					cell.innerHTML = `${(totalDep/totalBalance*100).toFixed(2)}%`;
+					if (totalDep/totalBalance < 1) cell.classList.add("negative");
+					else cell.classList.add("positive");
+				}
+			}
 			row.appendChild(cell);
 		}
 		footer.appendChild(row);
@@ -113,6 +137,28 @@ Module.register("MMM-Binance", {
 			cell.classList.add("cell-" + colType);
 			cell.innerHTML = balance.toFixed(2);
 			break;
+		case "roi":
+			cell.classList.add("cell-" + colType);
+			if (this.config.deposited.hasOwnProperty(symbol) && Array.isArray(this.config.deposited[symbol])) {
+				let deposited = this.config.deposited[symbol]
+				let totalDep = 0;
+				for(let i = 0; i < deposited.length; i++){
+					if (deposited[i].hasOwnProperty('amount') && deposited[i].hasOwnProperty('buyAtPrice')){
+						totalDep += deposited[i]['amount'] * deposited[i]['buyAtPrice'];
+					}
+				}
+				cell.innerHTML = `${(totalDep/balance*100).toFixed(2)}%`;
+				if (totalDep/balance < 1) cell.classList.add("negative");
+				else cell.classList.add("positive");
+				this.ROIs.push({
+					symbol: symbol,
+					totalDep: totalDep,
+					roi: totalDep/balance
+				})
+			} else {
+				cell.innerHTML = "100%";
+			}
+			break;
 		default:
         	cell.innerHTML = " ";
 		}
@@ -130,6 +176,7 @@ Module.register("MMM-Binance", {
 	
 	suspend: function () {
 		console.log("MMM-Binance is suspend");
+		this.loaded = false;
 		if (this.updateTimer) {
 			clearInterval(this.updateTimer);
 		}
@@ -156,6 +203,7 @@ Module.register("MMM-Binance", {
 				this.cryptoData = payload;
 				this.cryptoData.assets.sort((a, b) => a.balance - b.balance).reverse();
 				this.loaded = true;
+				this.ROIs = [];
 				this.updateDom();
 				break;
 			case "LOG_ERROR":

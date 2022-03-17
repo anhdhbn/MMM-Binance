@@ -20,3 +20,6 @@
 .MMM-Binance .loading {
 	color: #666666;
 }
+
+.MMM-Binance .negative { color: #FF5A44; }
+.MMM-Binance .positive { color: #A3EA80; }
