@@ -106,8 +106,8 @@ Module.register("MMM-Binance", {
 				if (totalBalance === 0) {
 					cell.innerHTML = "100%"
 				} else {
-					cell.innerHTML = `${(totalDep/totalBalance*100).toFixed(2)}%`;
-					if (totalDep/totalBalance < 1) cell.classList.add("negative");
+					cell.innerHTML = `${(totalBalance/totalDep*100).toFixed(2)}%`;
+					if (totalBalance/totalDep < 1) cell.classList.add("negative");
 					else cell.classList.add("positive");
 				}
 			}
@@ -147,13 +147,13 @@ Module.register("MMM-Binance", {
 						totalDep += deposited[i]['amount'] * deposited[i]['buyAtPrice'];
 					}
 				}
-				cell.innerHTML = `${(totalDep/balance*100).toFixed(2)}%`;
-				if (totalDep/balance < 1) cell.classList.add("negative");
+				cell.innerHTML = `${(balance/totalDep*100).toFixed(2)}%`;
+				if (balance/totalDep < 1) cell.classList.add("negative");
 				else cell.classList.add("positive");
 				this.ROIs.push({
 					symbol: symbol,
 					totalDep: totalDep,
-					roi: totalDep/balance
+					roi: balance/totalDep
 				})
 			} else {
 				cell.innerHTML = "100%";
